@@ -6,6 +6,7 @@ import java.util.List;
 
 
 public interface SongRepository extends JpaRepository<Song, Long> {
+    List<Song> findAllByOrderByIdAsc();
     List<Song> findByTitleContaining(String title);
     List<Song> findByTitleContainingIgnoreCase(String title);
     List<Song> findByArtistContaining(String title);
@@ -21,4 +22,5 @@ public interface SongRepository extends JpaRepository<Song, Long> {
     List<Song> findByTitleContainingIgnoreCaseOrArtistContainingIgnoreCaseOrAlbumIgnoreCaseOrGenreIgnoreCase(String title, String artist, String album, String genre);
     List<Song> findByTitleContainingIgnoreCaseOrArtistContainingIgnoreCaseOrAlbumContainingIgnoreCaseOrGenreIgnoreCase(String title, String artist, String album, String genre);
     List<Song> findByTitleContainingIgnoreCaseOrArtistContainingIgnoreCaseOrAlbumContainingIgnoreCaseOrGenreContainingIgnoreCase(String title, String artist, String album, String genre);
+    List<Song> findByTitleContainingIgnoreCaseOrArtistContainingIgnoreCaseOrAlbumContainingIgnoreCaseOrGenreContainingIgnoreCaseOrderByIdAsc(String title, String artist, String album, String genre);
 }

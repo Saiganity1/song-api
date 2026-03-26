@@ -17,7 +17,7 @@ public class SongController {
     private SongRepository songRepository;
 
     @PostMapping
-    public ResponseEntity createSong(@RequestBody Song song) throws URISyntaxException {
+    public ResponseEntity<Song> createSong(@RequestBody Song song) throws URISyntaxException {
         Song savedSong = songRepository.save(song);
         return ResponseEntity.ok()
                 .location(new URI("/sicat/songs/" + savedSong.getId()))
@@ -26,7 +26,7 @@ public class SongController {
 
     @GetMapping
     public @ResponseBody Iterable<Song> getAllSongs() {
-        return songRepository.findAll();
+        return songRepository.findAllByOrderByIdAsc();
     }
 
     @GetMapping("/{id}")
@@ -80,7 +80,7 @@ public class SongController {
     @ResponseBody
     // 2. Changed @RequestParam to @PathVariable
     public ResponseEntity<List<Song>> searchSongs(@PathVariable String keyword) {
-        List<Song> results = songRepository.findByTitleContainingIgnoreCaseOrArtistContainingIgnoreCaseOrAlbumContainingIgnoreCaseOrGenreContainingIgnoreCase(
+        List<Song> results = songRepository.findByTitleContainingIgnoreCaseOrArtistContainingIgnoreCaseOrAlbumContainingIgnoreCaseOrGenreContainingIgnoreCaseOrderByIdAsc(
                 keyword, keyword, keyword, keyword
         );
 
