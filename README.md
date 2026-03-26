@@ -31,7 +31,7 @@ Your app should be reachable at:
 
 ## 4) Confirm app is running
 Open this in browser (or Postman):
-- `GET https://<your-render-service>.onrender.com/velasco/songs`
+- `GET https://<your-render-service>.onrender.com/sicat/songs`
 
 If it returns `[]` (or a JSON list), deployment is good.
 
@@ -41,7 +41,7 @@ Set a Postman variable:
 
 ### A. Create song
 - **Method**: `POST`
-- **URL**: `{{baseUrl}}/velasco/songs`
+- **URL**: `{{baseUrl}}/sicat/songs`
 - **Body (raw JSON)**:
 ```json
 {
@@ -56,17 +56,17 @@ Set a Postman variable:
 
 ### B. Get all songs
 - **Method**: `GET`
-- **URL**: `{{baseUrl}}/velasco/songs`
+- **URL**: `{{baseUrl}}/sicat/songs`
 - Expected: list of songs
 
 ### C. Get by ID
 - **Method**: `GET`
-- **URL**: `{{baseUrl}}/velasco/songs/1`
+- **URL**: `{{baseUrl}}/sicat/songs/1`
 - Expected: song JSON or `404`
 
 ### D. Update song
 - **Method**: `PUT`
-- **URL**: `{{baseUrl}}/velasco/songs/1`
+- **URL**: `{{baseUrl}}/sicat/songs/1`
 - **Body (raw JSON)**:
 ```json
 {
@@ -81,12 +81,12 @@ Set a Postman variable:
 
 ### E. Search songs
 - **Method**: `GET`
-- **URL**: `{{baseUrl}}/velasco/songs/search/shape`
+- **URL**: `{{baseUrl}}/sicat/songs/search/shape`
 - Expected: matching list (possibly empty list)
 
 ### F. Delete song
 - **Method**: `DELETE`
-- **URL**: `{{baseUrl}}/velasco/songs/1`
+- **URL**: `{{baseUrl}}/sicat/songs/1`
 - Expected: `200 OK` and delete message
 
 ## 6) Common Render issues
