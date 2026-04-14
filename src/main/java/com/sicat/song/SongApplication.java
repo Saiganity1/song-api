@@ -21,19 +21,53 @@ public class SongApplication {
     private static Map<String, Object> buildRenderDatabaseDefaults() {
         Map<String, Object> defaults = new HashMap<>();
 
-        // Some hosts provide DATABASE_URL as postgres://user:pass@host:port/db?sslmode=require.
-        String databaseUrl = System.getenv("DATABASE_URL");
-        if (databaseUrl == null || databaseUrl.isBlank()) {
+        String databaseUrl = firstPresent(
+            "SPRING_DATASOURCE_URL",
+            "JDBC_DATABASE_URL",
+            "DATABASE_JDBC_URL",
+            "DATABASE_URL",
+            "POSTGRES_URL",
+            "RENDER_POSTGRES_URL"
+        );
+
+        if (databaseUrl != null && !databaseUrl.isBlank()) {
+            applyDatabaseUrl(defaults, databaseUrl);
             return defaults;
         }
 
+        String host = firstPresent("DB_HOST", "PGHOST", "POSTGRES_HOST", "RENDER_POSTGRES_HOST");
+        if (host == null || host.isBlank()) {
+            return defaults;
+        }
+
+        String port = firstPresent("DB_PORT", "PGPORT", "POSTGRES_PORT", "RENDER_POSTGRES_PORT");
+        String db = firstPresent("DB_NAME", "PGDATABASE", "POSTGRES_DB", "RENDER_POSTGRES_DB");
+        String sslMode = firstPresent("DB_SSLMODE", "PGSSLMODE", "POSTGRES_SSLMODE", "RENDER_POSTGRES_SSLMODE");
+
+        String jdbcUrl = "jdbc:postgresql://" + host + ":" + defaultIfBlank(port, "5432") + "/" + defaultIfBlank(db, "postgres")
+            + "?sslmode=" + defaultIfBlank(sslMode, "require");
+        defaults.put("spring.datasource.url", jdbcUrl);
+
+        String username = firstPresent("DB_USERNAME", "DB_USER", "PGUSER", "POSTGRES_USER", "RENDER_POSTGRES_USER");
+        String password = firstPresent("DB_PASSWORD", "PGPASSWORD", "POSTGRES_PASSWORD", "RENDER_POSTGRES_PASSWORD");
+        if (username != null && !username.isBlank()) {
+            defaults.put("spring.datasource.username", username);
+        }
+        if (password != null && !password.isBlank()) {
+            defaults.put("spring.datasource.password", password);
+        }
+
+        return defaults;
+    }
+
+    private static void applyDatabaseUrl(Map<String, Object> defaults, String databaseUrl) {
         if (databaseUrl.startsWith("jdbc:postgresql://")) {
             defaults.put("spring.datasource.url", databaseUrl);
-            return defaults;
+            return;
         }
 
         if (!(databaseUrl.startsWith("postgres://") || databaseUrl.startsWith("postgresql://"))) {
-            return defaults;
+            return;
         }
 
         URI uri = URI.create(databaseUrl);
@@ -63,8 +97,20 @@ public class SongApplication {
                 defaults.put("spring.datasource.password", urlDecode(parts[1]));
             }
         }
+    }
 
-        return defaults;
+    private static String firstPresent(String... names) {
+        for (String name : names) {
+            String value = System.getenv(name);
+            if (value != null && !value.isBlank()) {
+                return value;
+            }
+        }
+        return null;
+    }
+
+    private static String defaultIfBlank(String value, String fallback) {
+        return (value == null || value.isBlank()) ? fallback : value;
     }
 
     private static String urlDecode(String value) {
