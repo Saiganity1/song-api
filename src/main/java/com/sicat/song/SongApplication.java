@@ -37,6 +37,10 @@ public class SongApplication {
 
         String host = firstPresent("DB_HOST", "PGHOST", "POSTGRES_HOST", "RENDER_POSTGRES_HOST");
         if (host == null || host.isBlank()) {
+            // Local/dev fallback when nothing is provided via env vars.
+            defaults.put("spring.datasource.url", "jdbc:postgresql://localhost:5432/db_song?sslmode=disable");
+            defaults.put("spring.datasource.username", "postgres");
+            defaults.put("spring.datasource.password", "admin");
             return defaults;
         }
 
@@ -81,8 +85,14 @@ public class SongApplication {
 
         jdbc.append(uri.getPath() == null ? "" : uri.getPath());
 
-        if (uri.getQuery() != null && !uri.getQuery().isBlank()) {
-            jdbc.append("?").append(uri.getQuery());
+        String query = uri.getQuery();
+        if (query != null && !query.isBlank()) {
+            jdbc.append("?").append(query);
+            if (!query.contains("sslmode=")) {
+                jdbc.append("&sslmode=require");
+            }
+        } else {
+            jdbc.append("?sslmode=require");
         }
 
         defaults.put("spring.datasource.url", jdbc.toString());
@@ -95,6 +105,32 @@ public class SongApplication {
             }
             if (parts.length > 1 && !parts[1].isBlank()) {
                 defaults.put("spring.datasource.password", urlDecode(parts[1]));
+            }
+        }
+
+        // Some providers set DATABASE_URL without userinfo; allow separate env vars as fallback.
+        if (!defaults.containsKey("spring.datasource.username")) {
+            String fallbackUsername = firstPresent(
+                "SPRING_DATASOURCE_USERNAME",
+                "DB_USERNAME",
+                "DB_USER",
+                "PGUSER",
+                "POSTGRES_USER"
+            );
+            if (fallbackUsername != null && !fallbackUsername.isBlank()) {
+                defaults.put("spring.datasource.username", fallbackUsername);
+            }
+        }
+
+        if (!defaults.containsKey("spring.datasource.password")) {
+            String fallbackPassword = firstPresent(
+                "SPRING_DATASOURCE_PASSWORD",
+                "DB_PASSWORD",
+                "PGPASSWORD",
+                "POSTGRES_PASSWORD"
+            );
+            if (fallbackPassword != null && !fallbackPassword.isBlank()) {
+                defaults.put("spring.datasource.password", fallbackPassword);
             }
         }
     }
