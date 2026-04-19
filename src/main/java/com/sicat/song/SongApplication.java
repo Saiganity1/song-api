@@ -66,7 +66,8 @@ public class SongApplication {
 
     private static void applyDatabaseUrl(Map<String, Object> defaults, String databaseUrl) {
         if (databaseUrl.startsWith("jdbc:postgresql://")) {
-            defaults.put("spring.datasource.url", databaseUrl);
+            defaults.put("spring.datasource.url", ensureSslModeRequire(databaseUrl));
+            applyCredentialFallbacks(defaults);
             return;
         }
 
@@ -109,6 +110,10 @@ public class SongApplication {
         }
 
         // Some providers set DATABASE_URL without userinfo; allow separate env vars as fallback.
+        applyCredentialFallbacks(defaults);
+    }
+
+    private static void applyCredentialFallbacks(Map<String, Object> defaults) {
         if (!defaults.containsKey("spring.datasource.username")) {
             String fallbackUsername = firstPresent(
                 "SPRING_DATASOURCE_USERNAME",
@@ -133,6 +138,17 @@ public class SongApplication {
                 defaults.put("spring.datasource.password", fallbackPassword);
             }
         }
+    }
+
+    private static String ensureSslModeRequire(String jdbcUrl) {
+        if (jdbcUrl == null || jdbcUrl.isBlank()) {
+            return jdbcUrl;
+        }
+        String lower = jdbcUrl.toLowerCase();
+        if (lower.contains("sslmode=")) {
+            return jdbcUrl;
+        }
+        return jdbcUrl + (jdbcUrl.contains("?") ? "&" : "?") + "sslmode=require";
     }
 
     private static String firstPresent(String... names) {
